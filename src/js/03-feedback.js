@@ -1,38 +1,34 @@
-const throttle = require("lodash.throttle");
+import throttle from 'lodash.throttle';
 
-const refs = {
-  form: document.querySelector('.feedback-form'),
-};
 
-const LOCALSTORAGE_KEY = 'feedback-form-state';
+const formRef = document.querySelector('.feedback-form')
+const emailRef = document.querySelector('[name="email"]');
+const messageRef = document.querySelector('[name="message"]');
 
-refs.form.addEventListener('input',throttle(onInputForm,500));
-refs.form.addEventListener('submit', onSubmitForm);
-window.addEventListener('load', updateOutputOnload);
+const STORAGE_KEY = 'feedback-form-state'
 
-function onInputForm(e) {
-  e.preventDefault();
-  const message = refs.form.elements.message.value;
-  const email = refs.form.elements.email.value;
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ message, email }));
-  
+formRef.addEventListener('submit', onFormSubmit);
+formRef.addEventListener('input', throttle(onFormInput,500));
+
+function onFormInput () {
+   const formData = { email: emailRef.value, message: messageRef.value };
+    localStorage.setItem('feedback-form-state', JSON.stringify(formData));
 }
 
-function updateOutputOnload(e) {
-  e.preventDefault();
-  const outputTextContent = localStorage.getItem(LOCALSTORAGE_KEY);
-  const outputObjectContent = JSON.parse(outputTextContent)||{email:"", message:""};
-  const { email, message } = outputObjectContent;
-  refs.form.elements.email.value = email;
-  refs.form.elements.message.value = message;
+function onFormSubmit(evn) {
+    evn.preventDefault();
+    if (emailRef.value && messageRef.value) {
+        console.log(JSON.parse(localStorage.getItem('feedback-form-state')));
+        evn.currentTarget.reset();
+        localStorage.removeItem('feedback-form-state');
+    }
 }
+(function dataLocalStorage() {
+  const data = JSON.parse(localStorage.getItem('feedback-form-state'));
+  if (data) {
+    data.email ? (emailRef.value = data.email) : {};
+    data.message ? (messageRef.value = data.message) : {};
+  }
+})();
 
-function onSubmitForm(e) {
-  e.preventDefault();
-  const {
-    elements: { email, message },
-  } = e.currentTarget;
-  console.log({email:email.value, message:message.value})
-  localStorage.clear();
-  refs.form.reset();
-}
+
